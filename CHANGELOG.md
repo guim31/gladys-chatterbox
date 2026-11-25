@@ -10,6 +10,8 @@ the notes of the version's GitHub Release.
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-11-25
+
 ### Added
 
 - Chatterbox (Resemble AI) as the voice of Gladys (5.3.0 or later): the scene
@@ -25,3 +27,6 @@ the notes of the version's GitHub Release.
   being checked every 5 minutes.
 - One announcement on several speakers asks the server once.
 - Documentation in English, French, German and Spanish.
+
+[Unreleased]: https://github.com/guim31/gladys-chatterbox/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/guim31/gladys-chatterbox/releases/tag/v1.0.0
