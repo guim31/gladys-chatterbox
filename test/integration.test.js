@@ -397,3 +397,53 @@ test('the clips kept in memory stay under 20 MB', async () => {
   assert.ok(bytes <= 20_000_000, `${bytes} bytes`);
   assert.equal(tts.cache.size, 4);
 });
+
+test('the time spent reading the voices is taken from the synthesis budget', async () => {
+  let clock = 0;
+  const { gladys, fetch, tts } = await setup({
+    now: () => clock,
+    routes: {
+      '/get_predefined_voices': () => {
+        clock += 8000;
+        return json(ANSWERS.predefinedVoices);
+      },
+    },
+  });
+  const bounds = [];
+  const speak = tts.client.speak.bind(tts.client);
+  tts.client.speak = (request, text, options) => {
+    bounds.push(options.timeoutMs);
+    return speak(request, text, options);
+  };
+  tts.voices = null;
+  await gladys.fake.ttsSynthesize('Oui.', 'fr');
+  assert.deepEqual(bounds, [17_000]);
+  assert.equal(fetch.speech().length, 1);
+});
+
+test('a configuration changed during the voice lookup does not mix servers', async () => {
+  let release;
+  let hold = false;
+  const { gladys, fetch, tts } = await setup({
+    routes: {
+      '/get_predefined_voices': () =>
+        hold
+          ? new Promise((resolve) => {
+              release = () => resolve(json(ANSWERS.predefinedVoices));
+            })
+          : json(ANSWERS.predefinedVoices),
+    },
+  });
+  hold = true;
+  tts.voices = null;
+  const pending = gladys.fake.ttsSynthesize('Oui.', 'fr');
+  while (!release) {
+    await new Promise((resolve) => setImmediate(resolve));
+  }
+  tts.useConfig({ base_url: 'http://192.0.2.20:8004', voice_fr: 'Olivia' });
+  release();
+  await pending;
+  const sent = fetch.speech().at(-1);
+  assert.equal(sent.url.origin, BASE);
+  assert.equal(sent.json.predefined_voice_id, 'Emily.wav');
+});

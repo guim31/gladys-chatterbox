@@ -115,6 +115,12 @@ export const MESSAGES = {
     de: 'Der Clip ist größer als die 5 MB, die Gladys annimmt: Teile die Durchsage auf.',
     es: 'El clip supera los 5 MB que acepta Gladys: divida el anuncio.',
   },
+  no_config: {
+    en: 'Gladys did not give the configuration of the integration: try again in a moment.',
+    fr: "Gladys n'a pas transmis la configuration de l'intégration : réessayez dans un instant.",
+    de: 'Gladys hat die Konfiguration der Integration nicht übermittelt: Versuche es gleich noch einmal.',
+    es: 'Gladys no ha transmitido la configuración de la integración: vuelva a intentarlo en un momento.',
+  },
   empty: {
     en: 'There is nothing to say in the text.',
     fr: "Il n'y a rien à dire dans le texte.",
@@ -396,6 +402,10 @@ export class Chatterbox {
     }
     this.loading ??= this.gladys.getConfig().then(
       (config) => {
+        if (this.loaded) {
+          // onConfigUpdated came first: its configuration is the newer one.
+          return;
+        }
         this.useConfig(config);
         this.startTimer();
         // Not awaited: the request waiting has its own time budget.
@@ -407,6 +417,22 @@ export class Chatterbox {
       },
     );
     await this.loading;
+  }
+
+  /**
+   * load(), failing as the buttons do: in red, in four languages.
+   * @returns {Promise<void>}
+   * @throws {ActionFailure} When Gladys does not give the configuration.
+   */
+  async loadForAction() {
+    try {
+      await this.load();
+    } catch (err) {
+      throw new ActionFailure(
+        localized((lang) => `${MESSAGES.no_config[lang]} [${err.message}]`),
+        err,
+      );
+    }
   }
 
   /**
@@ -440,7 +466,7 @@ export class Chatterbox {
    * @throws {ActionFailure} When no clip can be made.
    */
   async testVoice(fields = {}) {
-    await this.load();
+    await this.loadForAction();
     const language = fields?.language
       ? requestLanguage(fields.language)
       : spokenLanguage(this.settings, null);
@@ -465,7 +491,7 @@ export class Chatterbox {
    * @throws {ActionFailure} When the server does not answer.
    */
   async listVoices() {
-    await this.load();
+    await this.loadForAction();
     const { settings, generation } = this;
     if (settings.invalid || !settings.baseUrl) {
       throw failure(
@@ -494,13 +520,15 @@ export class Chatterbox {
    * The voice file of a language: from the lists of the last check, read
    * again when the name is not in them (a file added since).
    * @param {string} language - A code of LANGUAGES.
+   * @param {object} settings - The settings the synthesis runs with.
+   * @param {number} generation - Their generation.
    * @returns {Promise<{mode: 'predefined'|'clone', file: string}>} The voice.
    * @throws {Error & {kind: string}} When the server has no such voice, or does not answer.
    */
-  async voiceFor(language) {
-    const { settings, generation } = this;
+  async voiceFor(language, settings, generation) {
     const typed = settings.voices[language] ?? '';
-    let voice = this.voices ? resolveVoice(typed, this.voices) : null;
+    let voice =
+      this.voices && generation === this.generation ? resolveVoice(typed, this.voices) : null;
     if (!voice) {
       const voices = await this.client.voices(settings.baseUrl).catch((err) => {
         // A voice list that runs out of time is no long text: the check's message.
@@ -552,7 +580,13 @@ export class Chatterbox {
     let pending;
     let key;
     try {
-      const voice = await this.voiceFor(language);
+      const started = this.now();
+      const voice = await this.voiceFor(language, settings, generation);
+      // Gladys waits 30 s in all: a voice list read now shortens the synthesis.
+      const timeoutMs = Math.max(
+        1000,
+        this.client.speechTimeoutMs - Math.max(0, this.now() - started),
+      );
       const request = {
         baseUrl: settings.baseUrl,
         voice,
@@ -569,7 +603,7 @@ export class Chatterbox {
       pending = fresh ? null : this.inFlight.get(key);
       if (!pending) {
         pending = this.client
-          .speak(request, input)
+          .speak(request, input, { timeoutMs })
           .then((clip) => ({ ...clip, voice: voice.file }));
         this.inFlight.set(key, pending);
         pending

@@ -147,8 +147,11 @@ export class ChatterboxClient {
             : status >= 500
               ? 'server'
               : 'rejected';
-      const suffix = detail ? `: ${detail}` : '';
-      throw new SpeechError(kind, `${path}: HTTP ${status}${suffix}`, { status, detail });
+      // A server error can quote the text being spoken ("Error processing
+      // audio chunk N: …"): its detail is kept only for 4xx and 503.
+      const kept = status < 500 || status === 503 ? detail : '';
+      const suffix = kept ? `: ${kept}` : '';
+      throw new SpeechError(kind, `${path}: HTTP ${status}${suffix}`, { status, detail: kept });
     }
     return { response, body: data };
   }
@@ -173,13 +176,14 @@ export class ChatterboxClient {
    * Speak a text.
    * @param {{baseUrl: string|null, voice: {mode: 'predefined'|'clone', file: string}, language: string, exaggeration: number|null, speed: number|null}} request - Server, voice, settings (null: the server's).
    * @param {string} text - What to say.
+   * @param {{timeoutMs?: number}} [options] - A bound shorter than the default one.
    * @returns {Promise<{audio: Buffer, type: 'audio/wav', seconds: number, sampleRate: number, resampled: boolean}>} The clip.
    * @throws {SpeechError} On any failure.
    * @example
    * await client.speak({ baseUrl: 'http://192.0.2.10:8004', voice: { mode: 'predefined', file: 'Emily.wav' },
    *   language: 'fr', exaggeration: null, speed: null }, 'Bonjour.');
    */
-  async speak({ baseUrl, voice, language, exaggeration, speed }, text) {
+  async speak({ baseUrl, voice, language, exaggeration, speed }, text, { timeoutMs } = {}) {
     const json = {
       text,
       voice_mode: voice.mode,
@@ -196,7 +200,7 @@ export class ChatterboxClient {
     }
     const { response, body } = await this.request(baseUrl, '/tts', {
       json,
-      timeoutMs: this.speechTimeoutMs,
+      timeoutMs: Math.min(timeoutMs ?? this.speechTimeoutMs, this.speechTimeoutMs),
     });
     let clip;
     try {

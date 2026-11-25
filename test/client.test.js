@@ -164,3 +164,26 @@ test('a typed voice: ready-made first, then cloned; case and extension do not ma
   );
   assert.equal(resolveVoice('', { predefined: [], reference: ['x.wav'] }), null);
 });
+
+test('a server error never keeps its detail, which can quote the text', async () => {
+  const fetch = fakeServer({
+    '/tts': () => json('{"detail":"Error processing audio chunk 1: Secret 1234"}', 500),
+  });
+  const err = await new ChatterboxClient({ fetch }).speak(REQUEST, 'Secret 1234.').catch((e) => e);
+  assert.equal(err.kind, 'server');
+  assert.doesNotMatch(err.message, /Secret/);
+});
+
+test('a shorter bound can be asked for one synthesis, never a longer one', async () => {
+  const slow = (url, init) =>
+    new Promise((resolve, reject) => {
+      init.signal.addEventListener('abort', () => reject(init.signal.reason));
+    });
+  const client = new ChatterboxClient({ fetch: slow, speechTimeoutMs: 1000 });
+  const err = await client.speak(REQUEST, 'Oui.', { timeoutMs: 20 }).catch((e) => e);
+  assert.match(err.message, /within 20 ms/);
+  const capped = await new ChatterboxClient({ fetch: slow, speechTimeoutMs: 30 })
+    .speak(REQUEST, 'Oui.', { timeoutMs: 5000 })
+    .catch((e) => e);
+  assert.match(capped.message, /within 30 ms/);
+});
