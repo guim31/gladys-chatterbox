@@ -594,7 +594,14 @@ export class Chatterbox {
         exaggeration: settings.exaggeration,
         speed: settings.speed,
       };
-      key = JSON.stringify([voice, language, settings.exaggeration, settings.speed, input]);
+      key = JSON.stringify([
+        settings.baseUrl,
+        voice,
+        language,
+        settings.exaggeration,
+        settings.speed,
+        input,
+      ]);
       const cached = fresh ? null : this.cache.get(key);
       if (cached) {
         this.logger.debug(`Clip served from memory (${input.length} characters)`);
