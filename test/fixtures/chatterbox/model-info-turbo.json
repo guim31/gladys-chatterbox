@@ -1,0 +1,13 @@
+{
+  "loaded": true,
+  "type": "turbo",
+  "class_name": "ChatterboxTurboTTS",
+  "device": "cpu",
+  "sample_rate": 24000,
+  "supports_paralinguistic_tags": true,
+  "available_paralinguistic_tags": ["[laugh]", "[chuckle]", "[sigh]", "[gasp]", "[cough]"],
+  "turbo_available_in_package": true,
+  "multilingual_available_in_package": true,
+  "supports_multilingual": false,
+  "supported_languages": { "en": "English" }
+}

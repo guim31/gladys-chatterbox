@@ -1,0 +1,13 @@
+{
+  "loaded": false,
+  "type": null,
+  "class_name": null,
+  "device": "cpu",
+  "sample_rate": null,
+  "supports_paralinguistic_tags": false,
+  "available_paralinguistic_tags": [],
+  "turbo_available_in_package": true,
+  "multilingual_available_in_package": true,
+  "supports_multilingual": false,
+  "supported_languages": { "en": "English" }
+}

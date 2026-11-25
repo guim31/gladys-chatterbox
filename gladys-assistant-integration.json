@@ -1,177 +1,543 @@
 {
   "manifest_version": 1,
-  "type": "device",
-  "name": "Demo Devices Template",
+  "type": "tts",
+  "name": "Chatterbox TTS",
   "description": {
-    "en": "Starter template showing sensors, a switch, a dimmable light and a smart plug.",
-    "fr": "Template de démarrage : capteurs, interrupteur, lampe variable et prise connectée."
+    "en": "An expressive voice for Gladys with Chatterbox by Resemble AI, on your own server, voice cloning.",
+    "fr": "Une voix expressive pour Gladys avec Chatterbox de Resemble AI, sur votre serveur, voix clonables.",
+    "de": "Eine ausdrucksstarke Stimme für Gladys mit Chatterbox von Resemble AI, auf deinem Server, klonbar.",
+    "es": "Una voz expresiva para Gladys con Chatterbox de Resemble AI, en su servidor, voces clonables."
   },
   "version": "1.0.0",
-  "docker_image": "ghcr.io/gladysassistant/integration-template-js:1.0.0",
-  "gladys_version": ">=5.1.0",
-  "cover_image": "https://raw.githubusercontent.com/GladysAssistant/integration-template-js/master/cover.png",
-  "categories": ["lighting", "security", "environment"],
-  "transports": ["local", "cloud"],
+  "docker_image": "ghcr.io/guim31/gladys-chatterbox:1.0.0",
+  "gladys_version": ">=5.3.0",
+  "cover_image": "https://raw.githubusercontent.com/guim31/gladys-chatterbox/main/cover.png",
+  "categories": ["assistants"],
+  "keywords": [
+    "chatterbox",
+    "resemble ai",
+    "tts",
+    "text-to-speech",
+    "synthèse vocale",
+    "voix",
+    "voice",
+    "voice cloning",
+    "clonage de voix",
+    "local"
+  ],
+  "transports": ["local"],
   "config_schema": [
     {
       "key": "intro",
       "type": "section",
-      "label": { "en": "Getting started", "fr": "Pour commencer" },
+      "label": {
+        "en": "Your Chatterbox server",
+        "fr": "Votre serveur Chatterbox",
+        "de": "Dein Chatterbox-Server",
+        "es": "Su servidor Chatterbox"
+      },
       "description": {
-        "en": "The demo weather station reads real data from the free Open-Meteo API: pick the coordinates to observe. No account, no API key.",
-        "fr": "La station météo de démonstration lit de vraies données via l'API gratuite Open-Meteo : choisissez les coordonnées à observer. Pas de compte, pas de clé d'API."
+        "en": "Chatterbox runs on Chatterbox-TTS-Server, on your network. For French, German or Spanish, set its model to chatterbox-multilingual. A graphics card is needed: on a processor, a sentence takes over a minute. Then choose this voice in Integrations → Artificial Intelligence → Voice.",
+        "fr": "Chatterbox tourne sur Chatterbox-TTS-Server, sur votre réseau. Pour le français, l'allemand ou l'espagnol, réglez son modèle sur chatterbox-multilingual. Une carte graphique est nécessaire : sur processeur, une phrase prend plus d'une minute. Puis choisissez la voix dans Intelligence artificielle.",
+        "de": "Chatterbox läuft auf Chatterbox-TTS-Server, in deinem Netzwerk. Für Französisch, Deutsch oder Spanisch stelle sein Modell auf chatterbox-multilingual. Eine Grafikkarte ist nötig: Auf einem Prozessor dauert ein Satz über eine Minute. Wähle dann diese Stimme unter Künstliche Intelligenz → Stimme.",
+        "es": "Chatterbox funciona con Chatterbox-TTS-Server, en su red. Para el francés, el alemán o el español, ponga su modelo en chatterbox-multilingual. Se necesita una tarjeta gráfica: con un procesador, una frase tarda más de un minuto. Elija luego esta voz en Integraciones → Inteligencia artificial → Voz."
       },
       "links": [
         {
-          "url": "https://open-meteo.com/en/docs",
-          "label": { "en": "Open-Meteo documentation", "fr": "Documentation Open-Meteo" }
+          "url": "https://github.com/devnen/Chatterbox-TTS-Server",
+          "label": {
+            "en": "Chatterbox-TTS-Server (installation)",
+            "fr": "Chatterbox-TTS-Server (installation)",
+            "de": "Chatterbox-TTS-Server (Installation)",
+            "es": "Chatterbox-TTS-Server (instalación)"
+          }
+        },
+        {
+          "url": "https://github.com/resemble-ai/chatterbox",
+          "label": {
+            "en": "Chatterbox by Resemble AI",
+            "fr": "Chatterbox de Resemble AI",
+            "de": "Chatterbox von Resemble AI",
+            "es": "Chatterbox de Resemble AI"
+          }
         }
       ]
     },
     {
-      "key": "latitude",
-      "type": "number",
-      "label": { "en": "Latitude", "fr": "Latitude" },
-      "description": {
-        "en": "Latitude used for the demo weather sensor.",
-        "fr": "Latitude utilisée par le capteur météo de démonstration."
+      "key": "base_url",
+      "type": "string",
+      "label": {
+        "en": "Server address",
+        "fr": "Adresse du serveur",
+        "de": "Serveradresse",
+        "es": "Dirección del servidor"
       },
-      "placeholder": { "en": "e.g. 48.8566", "fr": "ex. 48.8566" },
-      "required": true,
-      "default": 48.8566,
-      "min": -90,
-      "max": 90
+      "description": {
+        "en": "Address of Chatterbox-TTS-Server, port 8004 by default.",
+        "fr": "Adresse de Chatterbox-TTS-Server, port 8004 par défaut.",
+        "de": "Adresse von Chatterbox-TTS-Server, standardmäßig Port 8004.",
+        "es": "Dirección de Chatterbox-TTS-Server, puerto 8004 por defecto."
+      },
+      "placeholder": {
+        "en": "http://192.0.2.10:8004",
+        "fr": "http://192.0.2.10:8004",
+        "de": "http://192.0.2.10:8004",
+        "es": "http://192.0.2.10:8004"
+      },
+      "required": true
     },
     {
-      "key": "longitude",
-      "type": "number",
-      "label": { "en": "Longitude", "fr": "Longitude" },
-      "description": {
-        "en": "Longitude used for the demo weather sensor.",
-        "fr": "Longitude utilisée par le capteur météo de démonstration."
-      },
-      "placeholder": { "en": "e.g. 2.3522", "fr": "ex. 2.3522" },
-      "required": true,
-      "default": 2.3522,
-      "min": -180,
-      "max": 180
-    },
-    {
-      "key": "unit",
+      "key": "language",
       "type": "select",
-      "label": { "en": "Temperature unit", "fr": "Unité de température" },
+      "label": {
+        "en": "Language",
+        "fr": "Langue",
+        "de": "Sprache",
+        "es": "Idioma"
+      },
+      "description": {
+        "en": "The language texts are read in. Automatic: the language of the Gladys user (French when unknown).",
+        "fr": "La langue dans laquelle les textes sont lus. Automatique : la langue de l'utilisateur de Gladys (le français si inconnue).",
+        "de": "Die Sprache, in der Texte gelesen werden. Automatisch: die Sprache des Gladys-Benutzers (Französisch, wenn unbekannt).",
+        "es": "El idioma en que se leen los textos. Automático: el idioma del usuario de Gladys (el francés si se desconoce)."
+      },
       "required": false,
-      "default": "celsius",
+      "default": "auto",
       "options": [
-        { "value": "celsius", "label": { "en": "Celsius", "fr": "Celsius" } },
-        { "value": "fahrenheit", "label": { "en": "Fahrenheit", "fr": "Fahrenheit" } }
+        {
+          "value": "auto",
+          "label": {
+            "en": "Automatic",
+            "fr": "Automatique",
+            "de": "Automatisch",
+            "es": "Automático"
+          }
+        },
+        {
+          "value": "fr",
+          "label": {
+            "en": "French",
+            "fr": "Français",
+            "de": "Französisch",
+            "es": "Francés"
+          }
+        },
+        {
+          "value": "en",
+          "label": {
+            "en": "English",
+            "fr": "Anglais",
+            "de": "Englisch",
+            "es": "Inglés"
+          }
+        },
+        {
+          "value": "de",
+          "label": {
+            "en": "German",
+            "fr": "Allemand",
+            "de": "Deutsch",
+            "es": "Alemán"
+          }
+        },
+        {
+          "value": "es",
+          "label": {
+            "en": "Spanish",
+            "fr": "Espagnol",
+            "de": "Spanisch",
+            "es": "Español"
+          }
+        }
       ]
     },
     {
-      "key": "poll_frequency",
-      "type": "number",
-      "label": { "en": "Refresh interval (s)", "fr": "Intervalle de rafraîchissement (s)" },
+      "key": "voice_fr",
+      "type": "string",
+      "label": {
+        "en": "Voice for French",
+        "fr": "Voix pour le français",
+        "de": "Stimme für Französisch",
+        "es": "Voz para el francés"
+      },
       "description": {
-        "en": "How often sensors are polled, in seconds (one minute minimum).",
-        "fr": "Fréquence d'interrogation des capteurs, en secondes (une minute minimum)."
+        "en": "A ready-made voice of the server (Emily, Gabriel…) or a recording of its reference_audio folder, cloned. Empty: Emily.",
+        "fr": "Une voix prête du serveur (Emily, Gabriel…) ou un enregistrement de son dossier reference_audio, cloné. Vide : Emily.",
+        "de": "Eine fertige Stimme des Servers (Emily, Gabriel…) oder eine Aufnahme aus seinem Ordner reference_audio, geklont. Leer: Emily.",
+        "es": "Una voz lista del servidor (Emily, Gabriel…) o una grabación de su carpeta reference_audio, clonada. Vacío: Emily."
+      },
+      "placeholder": {
+        "en": "Gianna",
+        "fr": "Gianna",
+        "de": "Gianna",
+        "es": "Gianna"
       },
       "required": false,
-      "default": 300,
-      "min": 60,
-      "max": 3600
+      "default": ""
+    },
+    {
+      "key": "voice_en",
+      "type": "string",
+      "label": {
+        "en": "Voice for English",
+        "fr": "Voix pour l'anglais",
+        "de": "Stimme für Englisch",
+        "es": "Voz para el inglés"
+      },
+      "description": {
+        "en": "A ready-made voice of the server (Emily, Gabriel…) or a recording of its reference_audio folder, cloned. Empty: Emily.",
+        "fr": "Une voix prête du serveur (Emily, Gabriel…) ou un enregistrement de son dossier reference_audio, cloné. Vide : Emily.",
+        "de": "Eine fertige Stimme des Servers (Emily, Gabriel…) oder eine Aufnahme aus seinem Ordner reference_audio, geklont. Leer: Emily.",
+        "es": "Una voz lista del servidor (Emily, Gabriel…) o una grabación de su carpeta reference_audio, clonada. Vacío: Emily."
+      },
+      "placeholder": {
+        "en": "Emily",
+        "fr": "Emily",
+        "de": "Emily",
+        "es": "Emily"
+      },
+      "required": false,
+      "default": ""
+    },
+    {
+      "key": "voice_de",
+      "type": "string",
+      "label": {
+        "en": "Voice for German",
+        "fr": "Voix pour l'allemand",
+        "de": "Stimme für Deutsch",
+        "es": "Voz para el alemán"
+      },
+      "description": {
+        "en": "A ready-made voice of the server (Emily, Gabriel…) or a recording of its reference_audio folder, cloned. Empty: Emily.",
+        "fr": "Une voix prête du serveur (Emily, Gabriel…) ou un enregistrement de son dossier reference_audio, cloné. Vide : Emily.",
+        "de": "Eine fertige Stimme des Servers (Emily, Gabriel…) oder eine Aufnahme aus seinem Ordner reference_audio, geklont. Leer: Emily.",
+        "es": "Una voz lista del servidor (Emily, Gabriel…) o una grabación de su carpeta reference_audio, clonada. Vacío: Emily."
+      },
+      "placeholder": {
+        "en": "Alexander",
+        "fr": "Alexander",
+        "de": "Alexander",
+        "es": "Alexander"
+      },
+      "required": false,
+      "default": ""
+    },
+    {
+      "key": "voice_es",
+      "type": "string",
+      "label": {
+        "en": "Voice for Spanish",
+        "fr": "Voix pour l'espagnol",
+        "de": "Stimme für Spanisch",
+        "es": "Voz para el español"
+      },
+      "description": {
+        "en": "A ready-made voice of the server (Emily, Gabriel…) or a recording of its reference_audio folder, cloned. Empty: Emily.",
+        "fr": "Une voix prête du serveur (Emily, Gabriel…) ou un enregistrement de son dossier reference_audio, cloné. Vide : Emily.",
+        "de": "Eine fertige Stimme des Servers (Emily, Gabriel…) oder eine Aufnahme aus seinem Ordner reference_audio, geklont. Leer: Emily.",
+        "es": "Una voz lista del servidor (Emily, Gabriel…) o una grabación de su carpeta reference_audio, clonada. Vacío: Emily."
+      },
+      "placeholder": {
+        "en": "Elena",
+        "fr": "Elena",
+        "de": "Elena",
+        "es": "Elena"
+      },
+      "required": false,
+      "default": ""
+    },
+    {
+      "key": "exaggeration",
+      "type": "select",
+      "label": {
+        "en": "Expressiveness",
+        "fr": "Expressivité",
+        "de": "Ausdrucksstärke",
+        "es": "Expresividad"
+      },
+      "description": {
+        "en": "Exaggeration of Chatterbox: 0.5 is a neutral voice, higher is more emotional and faster. Ignored by the Turbo model.",
+        "fr": "Exagération de Chatterbox : 0,5 donne une voix neutre, plus haut une voix plus émotive et plus rapide. Ignorée par le modèle Turbo.",
+        "de": "Übertreibung von Chatterbox: 0,5 ergibt eine neutrale Stimme, höher eine emotionalere und schnellere. Vom Turbo-Modell ignoriert.",
+        "es": "Exageración de Chatterbox: 0,5 da una voz neutra, más alto una voz más emotiva y más rápida. El modelo Turbo la ignora."
+      },
+      "required": false,
+      "default": "server",
+      "options": [
+        {
+          "value": "server",
+          "label": {
+            "en": "Server setting",
+            "fr": "Réglage du serveur",
+            "de": "Einstellung des Servers",
+            "es": "Ajuste del servidor"
+          }
+        },
+        {
+          "value": "0.25",
+          "label": {
+            "en": "0.25 (flat)",
+            "fr": "0,25 (monotone)",
+            "de": "0,25 (monoton)",
+            "es": "0,25 (monótona)"
+          }
+        },
+        {
+          "value": "0.5",
+          "label": {
+            "en": "0.5 (neutral)",
+            "fr": "0,5 (neutre)",
+            "de": "0,5 (neutral)",
+            "es": "0,5 (neutra)"
+          }
+        },
+        {
+          "value": "0.75",
+          "label": {
+            "en": "0.75",
+            "fr": "0,75",
+            "de": "0,75",
+            "es": "0,75"
+          }
+        },
+        {
+          "value": "1",
+          "label": {
+            "en": "1",
+            "fr": "1",
+            "de": "1",
+            "es": "1"
+          }
+        },
+        {
+          "value": "1.25",
+          "label": {
+            "en": "1.25",
+            "fr": "1,25",
+            "de": "1,25",
+            "es": "1,25"
+          }
+        },
+        {
+          "value": "1.5",
+          "label": {
+            "en": "1.5 (lively)",
+            "fr": "1,5 (vive)",
+            "de": "1,5 (lebhaft)",
+            "es": "1,5 (viva)"
+          }
+        },
+        {
+          "value": "2",
+          "label": {
+            "en": "2 (dramatic)",
+            "fr": "2 (théâtrale)",
+            "de": "2 (dramatisch)",
+            "es": "2 (dramática)"
+          }
+        }
+      ]
+    },
+    {
+      "key": "speed",
+      "type": "select",
+      "label": {
+        "en": "Speed",
+        "fr": "Vitesse",
+        "de": "Geschwindigkeit",
+        "es": "Velocidad"
+      },
+      "description": {
+        "en": "Speed of the speech, applied by the server after the synthesis.",
+        "fr": "Vitesse de la parole, appliquée par le serveur après la synthèse.",
+        "de": "Sprechgeschwindigkeit, vom Server nach der Synthese angewendet.",
+        "es": "Velocidad del habla, aplicada por el servidor tras la síntesis."
+      },
+      "required": false,
+      "default": "server",
+      "options": [
+        {
+          "value": "server",
+          "label": {
+            "en": "Server setting",
+            "fr": "Réglage du serveur",
+            "de": "Einstellung des Servers",
+            "es": "Ajuste del servidor"
+          }
+        },
+        {
+          "value": "0.8",
+          "label": {
+            "en": "0.8 (slower)",
+            "fr": "0,8 (plus lent)",
+            "de": "0,8 (langsamer)",
+            "es": "0,8 (más lento)"
+          }
+        },
+        {
+          "value": "0.9",
+          "label": {
+            "en": "0.9",
+            "fr": "0,9",
+            "de": "0,9",
+            "es": "0,9"
+          }
+        },
+        {
+          "value": "1",
+          "label": {
+            "en": "1 (normal)",
+            "fr": "1 (normal)",
+            "de": "1 (normal)",
+            "es": "1 (normal)"
+          }
+        },
+        {
+          "value": "1.1",
+          "label": {
+            "en": "1.1",
+            "fr": "1,1",
+            "de": "1,1",
+            "es": "1,1"
+          }
+        },
+        {
+          "value": "1.2",
+          "label": {
+            "en": "1.2",
+            "fr": "1,2",
+            "de": "1,2",
+            "es": "1,2"
+          }
+        },
+        {
+          "value": "1.3",
+          "label": {
+            "en": "1.3 (faster)",
+            "fr": "1,3 (plus rapide)",
+            "de": "1,3 (schneller)",
+            "es": "1,3 (más rápido)"
+          }
+        }
+      ]
     }
   ],
   "actions": [
     {
-      "key": "test_weather",
-      "label": { "en": "Test the weather provider", "fr": "Tester le fournisseur météo" },
-      "timeout_seconds": 30
-    },
-    {
-      "key": "identify",
-      "label": { "en": "Identify a device", "fr": "Identifier un appareil" },
+      "key": "test_voice",
+      "label": {
+        "en": "Test the voice",
+        "fr": "Tester la voix",
+        "de": "Stimme testen",
+        "es": "Probar la voz"
+      },
+      "description": {
+        "en": "Speaks a test sentence with the saved settings and shows the time it took (save first).",
+        "fr": "Fait dire une phrase de test avec les réglages enregistrés et affiche le temps mis (enregistrez d'abord).",
+        "de": "Lässt einen Testsatz mit den gespeicherten Einstellungen sprechen und zeigt die benötigte Zeit (zuerst speichern).",
+        "es": "Hace decir una frase de prueba con los ajustes guardados y muestra el tiempo empleado (guarde primero)."
+      },
+      "timeout_seconds": 30,
       "fields": [
         {
-          "key": "device",
+          "key": "language",
           "type": "select",
-          "source": "devices",
-          "label": { "en": "Device", "fr": "Appareil" },
-          "required": true
+          "label": {
+            "en": "Language",
+            "fr": "Langue",
+            "de": "Sprache",
+            "es": "Idioma"
+          },
+          "required": false,
+          "options": [
+            {
+              "value": "fr",
+              "label": {
+                "en": "French",
+                "fr": "Français",
+                "de": "Französisch",
+                "es": "Francés"
+              }
+            },
+            {
+              "value": "en",
+              "label": {
+                "en": "English",
+                "fr": "Anglais",
+                "de": "Englisch",
+                "es": "Inglés"
+              }
+            },
+            {
+              "value": "de",
+              "label": {
+                "en": "German",
+                "fr": "Allemand",
+                "de": "Deutsch",
+                "es": "Alemán"
+              }
+            },
+            {
+              "value": "es",
+              "label": {
+                "en": "Spanish",
+                "fr": "Espagnol",
+                "de": "Spanisch",
+                "es": "Español"
+              }
+            }
+          ]
         }
       ]
+    },
+    {
+      "key": "list_voices",
+      "label": {
+        "en": "Show the voices",
+        "fr": "Afficher les voix",
+        "de": "Stimmen anzeigen",
+        "es": "Mostrar las voces"
+      },
+      "description": {
+        "en": "Lists the ready-made voices of the server and the recordings it can clone.",
+        "fr": "Liste les voix prêtes du serveur et les enregistrements qu'il peut cloner.",
+        "de": "Listet die fertigen Stimmen des Servers und die Aufnahmen, die er klonen kann.",
+        "es": "Enumera las voces listas del servidor y las grabaciones que puede clonar."
+      },
+      "timeout_seconds": 15
     }
   ],
   "scene_triggers": [
     {
-      "key": "motion_detected",
-      "label": { "en": "Motion detected", "fr": "Mouvement détecté" },
-      "description": {
-        "en": "A demo motion sensor saw a person or an animal move.",
-        "fr": "Un détecteur de démonstration a vu bouger une personne ou un animal."
+      "key": "server_offline",
+      "label": {
+        "en": "Chatterbox server unavailable",
+        "fr": "Serveur Chatterbox indisponible",
+        "de": "Chatterbox-Server nicht verfügbar",
+        "es": "Servidor Chatterbox no disponible"
       },
-      "fields": [
-        {
-          "key": "device",
-          "type": "select",
-          "source": "devices",
-          "label": { "en": "Sensor", "fr": "Détecteur" }
-        },
-        {
-          "key": "target",
-          "type": "multi_select",
-          "label": { "en": "What moved", "fr": "Ce qui a bougé" },
-          "options": [
-            { "value": "person", "label": { "en": "Person", "fr": "Personne" } },
-            { "value": "animal", "label": { "en": "Animal", "fr": "Animal" } }
-          ]
-        }
-      ],
-      "variables": [
-        {
-          "key": "target",
-          "type": "string",
-          "label": { "en": "What moved", "fr": "Ce qui a bougé" }
-        }
-      ]
-    }
-  ],
-  "scene_actions": [
+      "description": {
+        "en": "The Chatterbox server stopped answering: announcements fail until it is back.",
+        "fr": "Le serveur Chatterbox ne répond plus : les annonces échouent jusqu'à son retour.",
+        "de": "Der Chatterbox-Server antwortet nicht mehr: Durchsagen schlagen fehl, bis er zurück ist.",
+        "es": "El servidor Chatterbox ya no responde: los anuncios fallan hasta que vuelva."
+      }
+    },
     {
-      "key": "identify_device",
-      "label": { "en": "Identify a device", "fr": "Identifier un appareil" },
-      "description": {
-        "en": "Make a device signal itself (the demo light blinks).",
-        "fr": "Fait se signaler un appareil (la lampe de démonstration clignote)."
+      "key": "server_online",
+      "label": {
+        "en": "Chatterbox server back",
+        "fr": "Serveur Chatterbox revenu",
+        "de": "Chatterbox-Server wieder da",
+        "es": "Servidor Chatterbox de vuelta"
       },
-      "timeout_seconds": 15,
-      "fields": [
-        {
-          "key": "device",
-          "type": "select",
-          "source": "devices",
-          "label": { "en": "Device", "fr": "Appareil" },
-          "required": true
-        }
-      ],
-      "outputs": [
-        {
-          "key": "signalled",
-          "type": "boolean",
-          "label": { "en": "Device signalled", "fr": "Appareil signalé" }
-        }
-      ]
-    }
-  ],
-  "widgets": [
-    {
-      "key": "demo_status",
-      "label": { "en": "Demo status", "fr": "État de la démo" },
       "description": {
-        "en": "Live temperature and plug power, plug connection and observed location.",
-        "fr": "Température et puissance en direct, connexion de la prise, position observée."
-      },
-      "icon": "activity",
-      "action_timeout_seconds": 15
+        "en": "The Chatterbox server answers again after an outage.",
+        "fr": "Le serveur Chatterbox répond de nouveau après une panne.",
+        "de": "Der Chatterbox-Server antwortet nach einem Ausfall wieder.",
+        "es": "El servidor Chatterbox vuelve a responder tras una avería."
+      }
     }
   ]
 }

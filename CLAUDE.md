@@ -16,8 +16,8 @@ its only runtime dependency. It started from the official JavaScript template.
 ```bash
 npm install
 npm test                                  # node --test, the built-in runner
-node --test test/devices.test.js          # one file
-node --test --test-name-pattern "plug"    # tests whose name matches
+node --test test/integration.test.js      # one file
+node --test --test-name-pattern "voice"   # tests whose name matches
 npm run lint                              # ESLint
 npm run format:check                      # Prettier, as the CI runs it
 npm run format                            # Prettier, fix in place
@@ -31,16 +31,17 @@ pushing.
 ## Architecture
 
 ```
-index.js                          SDK wiring only: handlers registered before connect()
-src/devices/index.js              registry of the device blueprints + dispatch helpers
-src/devices/<type>.js             one device type per file (buildDevice, onPoll, onSetValue...)
-src/scenes.js                     scene action handlers (manifest `scene_actions`)
-src/widgets.js                    dashboard widget handlers (manifest `widgets`)
-src/config.js                     DEFAULT_CONFIG (mirrors the manifest defaults) + normalization
-src/weather.js                    example driver (Open-Meteo)
-gladys-assistant-integration.json manifest: name, config_schema, actions, image...
-docs/en.md, docs/fr.md            user documentation, re-hosted by Gladys (mandatory)
+index.js                          SDK wiring only (registerHandlers + connect)
+src/app.js                        handlers: onTtsSynthesize, actions, config, lifecycle
+src/integration.js                Chatterbox: synthesis, memory, status, scene triggers, buttons
+src/chatterbox/client.js          HTTP client of Chatterbox-TTS-Server: /tts, model info, voice lists
+src/wav.js                        WAV header repair, resampling over 5 MB
+src/config.js                     DEFAULT_CONFIG (mirrors the manifest defaults), language, voices, settings
+src/lifecycle.js                  exit on an unhandled rejection
+gladys-assistant-integration.json manifest: type tts, config_schema, actions, scene_triggers
+docs/{en,fr,de,es}.md             user documentation, re-hosted by Gladys
 test/                             node --test, against the SDK's fake Gladys (integration-sdk/testing)
+test/fixtures/chatterbox/         real answers of Chatterbox-TTS-Server (WAV, model info, voices, errors)
 .github/scripts/release.mjs       release helpers (manifest bump, changelog), tested in test/
 ```
 
@@ -259,3 +260,36 @@ long, et sur un « Sie »/« Ihr… » de politesse en allemand. Le store exige 
 - Docs `en`, `fr`, `de`, `es` avec les mêmes sections.
 - Chauffe, ouverture, sécurité : ne rien rendre pilotable « comme un thermostat » ou par un assistant
   vocal quand une erreur serait dangereuse (leçon d'OctoPrint).
+
+## Chatterbox (cette intégration)
+
+- Serveur visé : **Chatterbox-TTS-Server** (devnen), le seul serveur Chatterbox répandu. API native : `POST /tts`
+  en JSON (`text`, `voice_mode` `predefined`|`clone`, `predefined_voice_id` ou `reference_audio_filename`,
+  `language`, `exaggeration`, `speed_factor`, `output_format`, `split_text`) → WAV 16 bits mono 24 kHz, en-tête
+  exact (sans `stream`) ; `GET /api/model-info` (`loaded`, `type`, `supported_languages`) ;
+  `GET /get_predefined_voices` (`[{display_name, filename}]`, dossier `voices/`, 28 voix livrées) ;
+  `GET /get_reference_files` (`[filename]`, dossier `reference_audio/`, voix à cloner). Erreurs FastAPI `{detail}` :
+  404 pour un fichier de voix absent, 503 tant que le modèle n'est pas chargé, 422 pour un texte vide. Pas
+  d'authentification. Port 8004.
+- `/v1/audio/speech` (compatible OpenAI) existe mais ne prend pas l'exagération, et la langue seulement en champ
+  non standard : d'où ce dépôt plutôt que `gladys-openai-tts`.
+- **Un serveur = un modèle** (`model.repo_id` du `config.yaml`) : `chatterbox-multilingual` (23 langues),
+  `chatterbox-turbo` (défaut, anglais seul, ignore l'exagération), `chatterbox` (anglais). Avec un modèle anglais
+  seul, une autre langue est refusée (`language_unsupported`) plutôt que lue avec des sons anglais ; le statut le
+  dit, en restant vert. `model-info-turbo.json` est dérivé du vrai `model-info` (champs de `get_model_info`), le
+  modèle turbo n'ayant pas été téléchargé.
+- **Bug du serveur sur processeur** (25/11/2026, image `Dockerfile.cpu`) : le modèle multilingue ne charge pas
+  (`torch.load` sans `map_location` dans le `mtl_tts.py` du fork `devnen/chatterbox-v2` ; corrigé dans
+  `resemble-ai/chatterbox`). `model-info` répond alors `loaded: false` (fixture `model-info-not-loaded.json`). Les
+  tests réels ont monté un `mtl_tts.py` corrigé.
+- **Lenteur sur processeur** (mesuré le 25/11/2026, 4 cœurs partagés, modèle multilingue) : 54 à 75 s pour « Oui. »,
+  80 à 130 s pour une phrase de 30 à 50 caractères (2 à 5 s de son), ~4,3 Go de mémoire. Gladys attend 30 s :
+  inutilisable sans carte graphique, dit dans la doc, le manifeste et le message de délai. Délai de 25 s ; un délai
+  dépassé en synthèse ne marque pas le serveur hors ligne (seuls « injoignable » et « modèle non chargé » le font).
+- Voix : le nom tapé est cherché sans casse ni extension, d'abord dans `voices/` (mode `predefined`), puis dans
+  `reference_audio/` (mode `clone`). Vide : `Emily.wav` (défaut du `config.yaml` livré), sinon la première voix.
+  Les listes viennent de la dernière vérification et sont relues quand le nom n'y est pas (fichier ajouté depuis).
+- Exagération et vitesse : `select` (valeurs décimales, cf. champs `number`), `server` laisse le réglage du
+  serveur (champ omis de la requête).
+- Les erreurs de synthèse remontent au cœur en **texte anglais** (`Error`), celles des actions en objet
+  `{ en, fr, de, es }` (`ActionFailure`, rouge dans l'interface).

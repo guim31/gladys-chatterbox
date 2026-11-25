@@ -1,33 +1,56 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { normalizeConfig, DEFAULT_CONFIG } from '../src/config.js';
+import {
+  DEFAULT_CONFIG,
+  normalizeBaseUrl,
+  normalizeConfig,
+  requestLanguage,
+  spokenLanguage,
+} from '../src/config.js';
 
-test('normalizeConfig returns the defaults when called with no argument', () => {
-  assert.deepEqual(normalizeConfig(), DEFAULT_CONFIG);
+test('the server address gets a scheme when missing, and loses a trailing slash and /tts', () => {
+  assert.equal(normalizeBaseUrl('192.0.2.10:8004/'), 'http://192.0.2.10:8004');
+  assert.equal(normalizeBaseUrl(' https://tts.example/tts '), 'https://tts.example');
+  assert.equal(normalizeBaseUrl('http://192.0.2.10:8004/docs'), 'http://192.0.2.10:8004');
+  assert.equal(normalizeBaseUrl('http://192.0.2.10/chatterbox/'), 'http://192.0.2.10/chatterbox');
 });
 
-test('normalizeConfig keeps user values over the defaults', () => {
-  const config = normalizeConfig({ latitude: 45.5, longitude: -73.6, unit: 'fahrenheit' });
-  assert.equal(config.latitude, 45.5);
-  assert.equal(config.longitude, -73.6);
-  assert.equal(config.unit, 'fahrenheit');
+test('an empty, invalid or credential-bearing address is no address', () => {
+  assert.equal(normalizeBaseUrl(''), null);
+  assert.equal(normalizeBaseUrl(42), null);
+  assert.equal(normalizeBaseUrl('ftp://192.0.2.10'), null);
+  assert.equal(normalizeBaseUrl('http://user:pass@192.0.2.10'), null);
+  assert.equal(normalizeConfig({ base_url: 'http://user:pass@192.0.2.10' }).invalid, true);
+  assert.equal(normalizeConfig({ base_url: '' }).invalid, false);
 });
 
-test('normalizeConfig coerces numeric strings coming from a form', () => {
-  const config = normalizeConfig({ latitude: '48.8', longitude: '2.3', poll_frequency: '600' });
-  assert.equal(config.latitude, 48.8);
-  assert.equal(config.longitude, 2.3);
-  assert.equal(config.poll_frequency, 600);
-  assert.equal(typeof config.poll_frequency, 'number');
+test('defaults: no server, the language of the user, the settings of the server', () => {
+  const settings = normalizeConfig(DEFAULT_CONFIG);
+  assert.deepEqual(settings, {
+    baseUrl: null,
+    invalid: false,
+    language: null,
+    voices: { fr: '', en: '', de: '', es: '' },
+    exaggeration: null,
+    speed: null,
+  });
+  assert.deepEqual(normalizeConfig(null), settings);
 });
 
-test('normalizeConfig falls back to the default for a missing numeric field', () => {
-  const config = normalizeConfig({ unit: 'celsius' });
-  assert.equal(config.poll_frequency, DEFAULT_CONFIG.poll_frequency);
+test('expressiveness and speed: only the choices of the form, a comma accepted', () => {
+  assert.equal(normalizeConfig({ exaggeration: '0,5' }).exaggeration, 0.5);
+  assert.equal(normalizeConfig({ exaggeration: 2 }).exaggeration, 2);
+  assert.equal(normalizeConfig({ exaggeration: '7' }).exaggeration, null);
+  assert.equal(normalizeConfig({ speed: '1.30' }).speed, 1.3);
+  assert.equal(normalizeConfig({ speed: 'server' }).speed, null);
 });
 
-test('GLADYS_PREFER_LOCAL defaults to true and only an explicit false disables it', () => {
-  assert.equal(normalizeConfig().GLADYS_PREFER_LOCAL, true);
-  assert.equal(normalizeConfig({ GLADYS_PREFER_LOCAL: true }).GLADYS_PREFER_LOCAL, true);
-  assert.equal(normalizeConfig({ GLADYS_PREFER_LOCAL: false }).GLADYS_PREFER_LOCAL, false);
+test('the language of a request is one of the four of Gladys, French otherwise', () => {
+  assert.equal(requestLanguage('fr-FR'), 'fr');
+  assert.equal(requestLanguage('EN_us'), 'en');
+  assert.equal(requestLanguage('it'), 'fr');
+  assert.equal(requestLanguage(null), 'fr');
+  assert.equal(spokenLanguage(normalizeConfig({ language: 'de' }), 'en'), 'de');
+  assert.equal(spokenLanguage(normalizeConfig({ language: 'auto' }), 'en'), 'en');
+  assert.equal(spokenLanguage(normalizeConfig({ language: 'xx' }), null), 'fr');
 });
