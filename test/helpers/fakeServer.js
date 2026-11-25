@@ -59,6 +59,20 @@ export function fakeServer(routes = {}) {
   return fetch;
 }
 
+/**
+ * A fetch that never answers until its signal aborts. AbortSignal.timeout()
+ * does not keep Node 22 alive: a ref'd timer does, until the abort.
+ * @returns {typeof fetch} The fake.
+ */
+export const hanging = () => (url, init) =>
+  new Promise((resolve, reject) => {
+    const alive = setTimeout(() => {}, 60_000);
+    init.signal.addEventListener('abort', () => {
+      clearTimeout(alive);
+      reject(init.signal.reason);
+    });
+  });
+
 /** A logger that records, by level. */
 export function recordingLogger() {
   const lines = { info: [], warn: [], debug: [], error: [] };

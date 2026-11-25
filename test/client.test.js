@@ -6,7 +6,7 @@ import {
   parseModelInfo,
   resolveVoice,
 } from '../src/chatterbox/client.js';
-import { ANSWERS, CLIPS, fakeServer, json, wav } from './helpers/fakeServer.js';
+import { ANSWERS, CLIPS, fakeServer, hanging, json, wav } from './helpers/fakeServer.js';
 
 const BASE = 'http://192.0.2.10:8004';
 const REQUEST = {
@@ -91,10 +91,7 @@ test('an unreachable server, a timeout and an answer that is no WAV', async () =
   assert.equal(err.kind, 'unreachable');
   assert.match(err.message, /ECONNREFUSED/);
 
-  const slow = (url, init) =>
-    new Promise((resolve, reject) => {
-      init.signal.addEventListener('abort', () => reject(init.signal.reason));
-    });
+  const slow = hanging();
   const late = await new ChatterboxClient({ fetch: slow, speechTimeoutMs: 20 })
     .speak(REQUEST, 'Oui.')
     .catch((e) => e);
@@ -175,10 +172,7 @@ test('a server error never keeps its detail, which can quote the text', async ()
 });
 
 test('a shorter bound can be asked for one synthesis, never a longer one', async () => {
-  const slow = (url, init) =>
-    new Promise((resolve, reject) => {
-      init.signal.addEventListener('abort', () => reject(init.signal.reason));
-    });
+  const slow = hanging();
   const client = new ChatterboxClient({ fetch: slow, speechTimeoutMs: 1000 });
   const err = await client.speak(REQUEST, 'Oui.', { timeoutMs: 20 }).catch((e) => e);
   assert.match(err.message, /within 20 ms/);
