@@ -30,6 +30,15 @@ Gladys before reporting a problem.
 
 In scope: the code of this repository and the Docker image it publishes.
 
+What the integration handles: the address of your Chatterbox-TTS-Server, the
+language, voice names and speech settings, stored by Gladys in the integration
+configuration (nothing is written under `/data`, no secret is asked). The texts
+to speak are sent in HTTP (or HTTPS) to the server you configure, on your local
+network, and kept in memory only (the 16 latest clips); they are never written
+to the logs. An address with a user name or password is refused.
+
 Out of scope: Gladys Assistant itself (see its
 [security policy](https://github.com/GladysAssistant/Gladys/security/policy)),
-and the third-party services and devices the integration talks to.
+and Chatterbox-TTS-Server, the Chatterbox models and voices (see
+[devnen/Chatterbox-TTS-Server](https://github.com/devnen/Chatterbox-TTS-Server)
+and [resemble-ai/chatterbox](https://github.com/resemble-ai/chatterbox)).
